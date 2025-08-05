@@ -42,11 +42,10 @@ var app = builder.Build();
 await app.Services.RunIdentitySeedAsync();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+
     app.UseSwaggerExtension(app);
     app.MapOpenApi();
-}
+
 
 app.UseHttpsRedirection();
 app.UseExceptionHandler();
