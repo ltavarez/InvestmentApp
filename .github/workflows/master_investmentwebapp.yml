@@ -16,23 +16,24 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set up .NET Core
+      - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.x'
 
       - name: Build WebApp project
-        run: dotnet build MyApp.WebApp/MyApp.WebApp.csproj --configuration Release
+        run: dotnet build ItlaInvestmentApp/ItlaInvestmentApp.csproj --configuration Release
 
       - name: Publish WebApp project
-        run: dotnet publish MyApp.WebApp/MyApp.WebApp.csproj --configuration Release --output ./publish
+        run: dotnet publish ItlaInvestmentApp/ItlaInvestmentApp.csproj --configuration Release --output ./publish
 
-      - name: Upload artifact for deployment job
+      - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
-          name: .net-app
+          name: webapp-artifact
           path: ./publish
 
   deploy:
