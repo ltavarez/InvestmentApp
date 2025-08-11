@@ -3,6 +3,9 @@ using InvestmentApp.Core.Application.Features.InvestmentPortfolios.Commands.Crea
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace InvestmentApp.Unit.Tests.Features.InvestmentPortfolios
 {
@@ -22,8 +25,11 @@ namespace InvestmentApp.Unit.Tests.Features.InvestmentPortfolios
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioRepository>());
 
-            var repository = new InvestmentPortfolioRepository(context);
+            var repository = new InvestmentPortfolioRepository(context, factoryRepMoq.Object);
             var handler = new CreateInvestmentPortfolioCommandHandler(repository, null!);
 
             var command = new CreateInvestmentPortfolioCommand
@@ -48,10 +54,13 @@ namespace InvestmentApp.Unit.Tests.Features.InvestmentPortfolios
 
         [Fact]
         public async Task Handle_Should_Return_Zero_When_Entity_Is_Null()
-        { 
+        {
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioRepository>());
 
-            var mockRepo = new FailingPortfolioRepository(context);
+            var mockRepo = new FailingPortfolioRepository(context, factoryRepMoq.Object);
             var handler = new CreateInvestmentPortfolioCommandHandler(mockRepo, null!);
 
             var command = new CreateInvestmentPortfolioCommand
@@ -65,10 +74,10 @@ namespace InvestmentApp.Unit.Tests.Features.InvestmentPortfolios
             result.Should().Be(0);
         }
 
-        private class FailingPortfolioRepository(InvestmentAppContext context) : InvestmentPortfolioRepository(context)
+        private class FailingPortfolioRepository(InvestmentAppContext context, ILoggerFactory loggerFactory) : InvestmentPortfolioRepository(context, loggerFactory)
         {
             public override Task<Core.Domain.Entities.InvestmentPortfolio?> AddAsync(Core.Domain.Entities.InvestmentPortfolio entity)
                 => Task.FromResult<Core.Domain.Entities.InvestmentPortfolio?>(null);
-        }       
+        }
     }
 }

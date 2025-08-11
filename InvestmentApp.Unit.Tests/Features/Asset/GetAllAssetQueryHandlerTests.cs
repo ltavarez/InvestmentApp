@@ -5,6 +5,9 @@ using InvestmentApp.Core.Application.Mappings.EntitiesAndDtos;
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace InvestmentApp.Unit.Tests.Features.Asset
 {
@@ -33,6 +36,9 @@ namespace InvestmentApp.Unit.Tests.Features.Asset
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
 
             var type1 = new Core.Domain.Entities.AssetType { Id = 1, Name = "Crypto", Description = "Digital assets" };
             var type2 = new Core.Domain.Entities.AssetType { Id = 2, Name = "Fiat", Description = "Gov currencies" };
@@ -47,7 +53,7 @@ namespace InvestmentApp.Unit.Tests.Features.Asset
 
             await context.SaveChangesAsync();
 
-            var repository = new AssetRepository(context);
+            var repository = new AssetRepository(context, factoryRepMoq.Object);
             var handler = new GetAllAssetQueryHandler(repository, _mapper);
 
             // Act
@@ -64,7 +70,11 @@ namespace InvestmentApp.Unit.Tests.Features.Asset
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            var repository = new AssetRepository(context);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
+
+            var repository = new AssetRepository(context, factoryRepMoq.Object);
             var handler = new GetAllAssetQueryHandler(repository, _mapper);
 
             // Act

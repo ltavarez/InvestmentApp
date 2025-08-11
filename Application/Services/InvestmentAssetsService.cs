@@ -5,6 +5,7 @@ using InvestmentApp.Core.Application.Interfaces;
 using InvestmentApp.Core.Domain.Entities;
 using InvestmentApp.Core.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace InvestmentApp.Core.Application.Services
 {
@@ -12,16 +13,19 @@ namespace InvestmentApp.Core.Application.Services
     {
         private readonly IInvestmentAssetRepository _investmentAssetRepository;
         private readonly IMapper _mapper;
-
-        public InvestmentAssetsService(IInvestmentAssetRepository investmentAssetRepository, IMapper mapper) : base(investmentAssetRepository, mapper)
+        private readonly ILogger<InvestmentAssetsService> _logger;
+        public InvestmentAssetsService(IInvestmentAssetRepository investmentAssetRepository, IMapper mapper, ILoggerFactory loggerFactory)
+            : base(investmentAssetRepository, mapper, loggerFactory.CreateLogger<InvestmentAssetsService>())
         {
             _investmentAssetRepository = investmentAssetRepository;
             _mapper = mapper;
+            _logger = loggerFactory.CreateLogger<InvestmentAssetsService>();
         }
         public async Task<InvestmentAssetsDto?> GetByAssetAndPortfolioAsync(int assetId, int portfolioId, string userId)
         {
             try
             {
+                _logger.LogInformation("Retrieving InvestmentAsset by AssetId: {AssetId} and PortfolioId: {PortfolioId} for UserId: {UserId}", assetId, portfolioId, userId);
                 var investmentAsset = await _investmentAssetRepository
                     .GetAllQueryWithInclude(["Asset"])
                     .FirstOrDefaultAsync(ia => ia.AssetId == assetId
@@ -29,13 +33,17 @@ namespace InvestmentApp.Core.Application.Services
                      && ia.InvestmentPortfolio != null
                 && ia.InvestmentPortfolio.UserId == userId);
 
+                _logger.LogInformation("InvestmentAsset retrieval completed. AssetId: {AssetId}, PortfolioId: {PortfolioId}, UserId: {UserId}", assetId, portfolioId, userId);
                 if (investmentAsset == null)
                 {
+                    _logger.LogWarning("No InvestmentAsset found for AssetId: {AssetId}, PortfolioId: {PortfolioId}, UserId: {UserId}", assetId, portfolioId, userId);
                     return null;
                 }
 
+                _logger.LogInformation("Mapping InvestmentAsset to InvestmentAssetsDto");
                 InvestmentAssetsDto dto = _mapper.Map<InvestmentAssetsDto>(investmentAsset);
 
+                _logger.LogInformation("Returning InvestmentAssetsDto for AssetId: {AssetId}, PortfolioId: {PortfolioId}, UserId: {UserId}", assetId, portfolioId, userId);
                 return dto;
             }
             catch (Exception)

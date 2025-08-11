@@ -3,6 +3,9 @@ using InvestmentApp.Core.Domain.Entities;
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace InvestmentApp.Integration.Tests.Persistence.Repositories
 {
@@ -22,7 +25,11 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             //Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            var repo = new InvestmentPortfolioRepository(context);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioRepository>());
+
+            var repo = new InvestmentPortfolioRepository(context, factoryMoq.Object);
             var portfolio = new InvestmentPortfolio
             {
                 Id = 0,
@@ -43,7 +50,10 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            var repo = new InvestmentPortfolioRepository(context);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioRepository>());
+            var repo = new InvestmentPortfolioRepository(context, factoryMoq.Object);
 
             //Act
             Func<Task> act = async () => await repo.AddAsync(null!);
@@ -57,6 +67,9 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioRepository>());
             var portfolio = new InvestmentPortfolio
             {
                 Id = 0,
@@ -65,7 +78,7 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
             };
             context.InvestmentPortfolios.Add(portfolio);
             await context.SaveChangesAsync();
-            var repo = new InvestmentPortfolioRepository(context);
+            var repo = new InvestmentPortfolioRepository(context, factoryMoq.Object);
 
             // Act
             var result = await repo.GetById(portfolio.Id);
@@ -81,7 +94,10 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            var repo = new InvestmentPortfolioRepository(context);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioRepository>());
+            var repo = new InvestmentPortfolioRepository(context, factoryMoq.Object);
 
             //Act
             var result = await repo.GetById(999);
@@ -95,6 +111,9 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             //Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioRepository>());
             var portfolio = new InvestmentPortfolio
             {
                 Id = 0,
@@ -104,7 +123,7 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
             context.InvestmentPortfolios.Add(portfolio);
             await context.SaveChangesAsync();
 
-            var repo = new InvestmentPortfolioRepository(context);
+            var repo = new InvestmentPortfolioRepository(context, factoryMoq.Object);
             portfolio.UserId = "updatedUser";
 
             //Act
@@ -120,7 +139,10 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            var repo = new InvestmentPortfolioRepository(context);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioRepository>());
+            var repo = new InvestmentPortfolioRepository(context, factoryMoq.Object);
 
             var fake = new InvestmentPortfolio
             {
@@ -141,6 +163,9 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioRepository>());
             var portfolio = new InvestmentPortfolio
             {
                 Id = 0,
@@ -149,7 +174,7 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
             };
             context.InvestmentPortfolios.Add(portfolio);
             await context.SaveChangesAsync();
-            var repo = new InvestmentPortfolioRepository(context);
+            var repo = new InvestmentPortfolioRepository(context, factoryMoq.Object);
 
             // Act
             await repo.DeleteAsync(portfolio.Id);
@@ -164,7 +189,10 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            var repo = new InvestmentPortfolioRepository(context);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioRepository>());
+            var repo = new InvestmentPortfolioRepository(context, factoryMoq.Object);
 
             // Act
             Func<Task> act = async () => await repo.DeleteAsync(999);
@@ -178,13 +206,16 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioRepository>());
             context.InvestmentPortfolios.AddRange(
                 new InvestmentPortfolio { UserId = Guid.NewGuid().ToString(), Id = 0, Name = "Test" },
                 new InvestmentPortfolio { UserId = Guid.NewGuid().ToString(), Id = 0, Name = "Test 2" }
             );
             await context.SaveChangesAsync();
 
-            var repo = new InvestmentPortfolioRepository(context);
+            var repo = new InvestmentPortfolioRepository(context, factoryMoq.Object);
 
             //Act
             var result = await repo.GetAllList();
@@ -198,6 +229,9 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             //Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioRepository>());
             var assetType = new AssetType { Id = 0, Name = "Crypto", Description = "" };
             var asset = new Asset { Id = 0, AssetTypeId = 1, Name = "BTC", Symbol = "BTC", AssetType = assetType };
             var portfolio = new InvestmentPortfolio
@@ -222,7 +256,7 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
             context.Assets.Add(asset);
             context.InvestmentPortfolios.Add(portfolio);
             await context.SaveChangesAsync();
-            var repo = new InvestmentPortfolioRepository(context);
+            var repo = new InvestmentPortfolioRepository(context, factoryMoq.Object);
 
             //Act
             var result = await repo.GetAllListWithInclude(["InvestmentAssets"]);
@@ -238,9 +272,12 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioRepository>());
             context.InvestmentPortfolios.Add(new InvestmentPortfolio { Id = 0, Name = "Test", UserId = Guid.NewGuid().ToString() });
             await context.SaveChangesAsync();
-            var repo = new InvestmentPortfolioRepository(context);
+            var repo = new InvestmentPortfolioRepository(context, factoryMoq.Object);
 
             // Act
             var query = repo.GetAllQuery();
@@ -255,6 +292,9 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioRepository>());
             var asset = new Asset {Id=0, Name = "ETH", Symbol = "ETH", AssetTypeId = 1 };
             var portfolio = new InvestmentPortfolio
             {
@@ -277,7 +317,7 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
             context.Assets.Add(asset);
             context.InvestmentPortfolios.Add(portfolio);
             await context.SaveChangesAsync();
-            var repo = new InvestmentPortfolioRepository(context);
+            var repo = new InvestmentPortfolioRepository(context, factoryMoq.Object);
 
             // Act
             var query = repo.GetAllQueryWithInclude(["InvestmentAssets"]);

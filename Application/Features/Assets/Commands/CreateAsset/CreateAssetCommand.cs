@@ -1,6 +1,7 @@
 ﻿using InvestmentApp.Core.Application.Exceptions;
 using InvestmentApp.Core.Domain.Interfaces;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Net;
 
@@ -30,15 +31,18 @@ namespace InvestmentApp.Core.Application.Features.Assets.Commands.CreateAsset
 
     public class CreateAssetCommandHandler : IRequestHandler<CreateAssetCommand, int>
     {
-        private readonly IAssetRepository _assetRepository;       
-
-        public CreateAssetCommandHandler(IAssetRepository assetRepository)
+        private readonly IAssetRepository _assetRepository;
+        private readonly ILogger _createAssetCommandHandlerLogger;
+        public CreateAssetCommandHandler(IAssetRepository assetRepository, ILoggerFactory loggerFactory)
         {
             _assetRepository = assetRepository;
+            _createAssetCommandHandlerLogger = loggerFactory.CreateLogger<CreateAssetCommandHandler>();
         }
 
         public async Task<int> Handle(CreateAssetCommand command, CancellationToken cancellationToken)
         {
+            _createAssetCommandHandlerLogger.LogInformation("Creating asset with Name: {Name}, Description: {Description}, Symbol: {Symbol}, AssetTypeId: {AssetTypeId}",
+                command.Name, command.Description, command.Symbol, command.AssetTypeId);
             Domain.Entities.Asset entity = new()
             {
                 Id = 0,
@@ -48,8 +52,11 @@ namespace InvestmentApp.Core.Application.Features.Assets.Commands.CreateAsset
                 Symbol = command.Symbol ?? ""                
             };
 
+            _createAssetCommandHandlerLogger.LogInformation("Asset entity created with Id: {Id}, Name: {Name}, Description: {Description}, Symbol: {Symbol}, AssetTypeId: {AssetTypeId}",
+                entity.Id, entity.Name, entity.Description, entity.Symbol, entity.AssetTypeId);
             Domain.Entities.Asset? result = await _assetRepository.AddAsync(entity);
 
+            _createAssetCommandHandlerLogger.LogInformation("Asset creation result: {Result}", result != null ? "Success" : "Failure");
             return result == null ? throw new ApiException("Error created assets", (int)HttpStatusCode.InternalServerError) : result.Id;
         }
     }

@@ -3,6 +3,9 @@ using InvestmentApp.Core.Domain.Entities;
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace InvestmentApp.Integration.Tests.Persistence.Repositories
 {
@@ -21,8 +24,12 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         public async Task AddAsync_Should_Add_Asset_To_Database()
         {
             // Arrange
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
+
             using var context = new InvestmentAppContext(_dbOptions);
-            var repository = new AssetRepository(context);
+            var repository = new AssetRepository(context, factoryMoq.Object);
             var asset = new Asset { Name = "Bitcoin", Symbol = "BTC", AssetTypeId = 1, Id = 0 };
 
             // Act
@@ -40,7 +47,11 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            var repository = new AssetRepository(context);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
+
+            var repository = new AssetRepository(context, factoryMoq.Object);
 
             //Act
             Func<Task> act = async () => await repository.AddAsync(null!);
@@ -54,10 +65,14 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             //Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
+
             var asset = new Asset { Name = "Ethereum", Symbol = "ETH", AssetTypeId = 1, Id = 0 };
             context.Assets.Add(asset);
             await context.SaveChangesAsync();
-            var repository = new AssetRepository(context);
+            var repository = new AssetRepository(context, factoryMoq.Object);
 
             //Act
             var result = await repository.GetById(asset.Id);
@@ -73,7 +88,11 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            var repository = new AssetRepository(context);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
+
+            var repository = new AssetRepository(context, factoryMoq.Object);
 
             // Act
             var result = await repository.GetById(999);
@@ -87,11 +106,14 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
             var asset = new Asset { Name = "Ripple", Symbol = "XRP", AssetTypeId = 1, Id = 0 };
             context.Assets.Add(asset);
             await context.SaveChangesAsync();
 
-            var repository = new AssetRepository(context);
+            var repository = new AssetRepository(context, factoryMoq.Object);
             asset.Name = "Updated Ripple";
 
             // Act
@@ -107,7 +129,10 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            var repository = new AssetRepository(context);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
+            var repository = new AssetRepository(context, factoryMoq.Object);
             var asset = new Asset { Id = 999, Name = "Fake", Symbol = "X", AssetTypeId = 1 };
 
             // Act
@@ -122,10 +147,13 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
             var asset = new Asset { Name = "Litecoin", Symbol = "LTC", AssetTypeId = 1, Id = 0 };
             context.Assets.Add(asset);
             await context.SaveChangesAsync();
-            var repository = new AssetRepository(context);
+            var repository = new AssetRepository(context, factoryMoq.Object);
 
             // Act
             await repository.DeleteAsync(asset.Id);
@@ -140,7 +168,10 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            var repository = new AssetRepository(context);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
+            var repository = new AssetRepository(context, factoryMoq.Object);
 
             // Act
             Func<Task> act = async () => await repository.DeleteAsync(999);
@@ -154,11 +185,14 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             //Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
             context.Assets.AddRange(
                 new Asset { Name = "Bitcoin", Symbol = "BTC", AssetTypeId = 1, Id = 0 },
                 new Asset { Name = "Ethereum", Symbol = "ETH", AssetTypeId = 1, Id = 0 });
             await context.SaveChangesAsync();
-            var repository = new AssetRepository(context);
+            var repository = new AssetRepository(context, factoryMoq.Object);
 
             //Act
             var result = await repository.GetAllList();
@@ -172,7 +206,10 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            var repository = new AssetRepository(context);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
+            var repository = new AssetRepository(context, factoryMoq.Object);
 
             // Act
             var result = await repository.GetAllList();
@@ -186,6 +223,9 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
             context.Assets.Add(new Asset
             {
                 Id = 1,
@@ -195,7 +235,7 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
                 AssetType = new AssetType { Id = 1, Name = "Crypto", Description = "" }
             });
             await context.SaveChangesAsync();
-            var repo = new AssetRepository(context);
+            var repo = new AssetRepository(context, factoryMoq.Object);
 
             // Act
             var result = await repo.GetAllListWithInclude(["AssetType"]);
@@ -210,9 +250,12 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
             context.Assets.Add(new Asset { Id = 1, Name = "Bitcoin", Symbol = "BTC", AssetTypeId = 1 });
             await context.SaveChangesAsync();
-            var repo = new AssetRepository(context);
+            var repo = new AssetRepository(context, factoryMoq.Object);
 
             // Act
             var query = repo.GetAllQuery();
@@ -227,6 +270,10 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
+
             context.Assets.Add(new Asset
             {
                 Id = 1,
@@ -236,7 +283,7 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
                 AssetType = new AssetType { Id = 1, Name = "Crypto", Description = "" }
             });
             await context.SaveChangesAsync();
-            var repo = new AssetRepository(context);
+            var repo = new AssetRepository(context, factoryMoq.Object);
 
             // Act
             var query = repo.GetAllQueryWithInclude(["AssetType"]);

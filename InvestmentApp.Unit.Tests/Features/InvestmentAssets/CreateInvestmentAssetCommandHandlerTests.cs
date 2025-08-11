@@ -4,6 +4,9 @@ using InvestmentApp.Core.Domain.Entities;
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace InvestmentApp.Unit.Tests.Features.InvestmentAssets
 {
@@ -23,7 +26,10 @@ namespace InvestmentApp.Unit.Tests.Features.InvestmentAssets
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-        
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentAssetRepository>());
+
             var asset = new Core.Domain.Entities.Asset { Id = 1, Name = "Bitcoin", Symbol = "BTC", AssetTypeId = 1 };
             var portfolio = new InvestmentPortfolio { Id = 1, UserId = "user1", Name = "My Portfolio" };
 
@@ -31,7 +37,7 @@ namespace InvestmentApp.Unit.Tests.Features.InvestmentAssets
             context.InvestmentPortfolios.Add(portfolio);
             await context.SaveChangesAsync();
 
-            var repository = new InvestmentAssetRepository(context);
+            var repository = new InvestmentAssetRepository(context, factoryRepMoq.Object);
             var handler = new CreateInvestmentAssetCommandHandler(repository);
 
             var command = new CreateInvestmentAssetCommand
@@ -59,7 +65,10 @@ namespace InvestmentApp.Unit.Tests.Features.InvestmentAssets
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            var mockRepo = new FailingInvestmentAssetRepository(context); 
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentAssetRepository>());
+            var mockRepo = new FailingInvestmentAssetRepository(context, factoryRepMoq.Object); 
             var handler = new CreateInvestmentAssetCommandHandler(mockRepo);
 
             var command = new CreateInvestmentAssetCommand
@@ -75,7 +84,7 @@ namespace InvestmentApp.Unit.Tests.Features.InvestmentAssets
             result.Should().Be(0);
         }
     
-        private class FailingInvestmentAssetRepository(InvestmentAppContext context) : InvestmentAssetRepository(context)
+        private class FailingInvestmentAssetRepository(InvestmentAppContext context,ILoggerFactory loggerFactory) : InvestmentAssetRepository(context, loggerFactory)
         {
             public override Task<Core.Domain.Entities.InvestmentAssets?> AddAsync(Core.Domain.Entities.InvestmentAssets entity)
                 => Task.FromResult<Core.Domain.Entities.InvestmentAssets?>(null);

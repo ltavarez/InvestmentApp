@@ -5,6 +5,9 @@ using InvestmentApp.Core.Domain.Entities;
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace InvestmentApp.Unit.Tests.Features.AssetsHistories
 {
@@ -24,7 +27,9 @@ namespace InvestmentApp.Unit.Tests.Features.AssetsHistories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetHistoryRepository>());
             var initial = new AssetHistory
             {
                 Id = 1,
@@ -36,7 +41,7 @@ namespace InvestmentApp.Unit.Tests.Features.AssetsHistories
             context.AssetHistories.Add(initial);
             await context.SaveChangesAsync();
 
-            var repository = new AssetHistoryRepository(context);
+            var repository = new AssetHistoryRepository(context, factoryRepMoq.Object);
             var handler = new UpdateAssetHistoryCommandHandler(repository);
 
             var command = new UpdateAssetHistoryCommand
@@ -65,8 +70,11 @@ namespace InvestmentApp.Unit.Tests.Features.AssetsHistories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetHistoryRepository>());
 
-            var repository = new AssetHistoryRepository(context);
+            var repository = new AssetHistoryRepository(context, factoryRepMoq.Object);
             var handler = new UpdateAssetHistoryCommandHandler(repository);
 
             var command = new UpdateAssetHistoryCommand

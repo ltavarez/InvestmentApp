@@ -6,6 +6,9 @@ using InvestmentApp.Core.Domain.Entities;
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace InvestmentApp.Unit.Tests.Features.InvestmentPortfolios
 {
@@ -38,6 +41,9 @@ namespace InvestmentApp.Unit.Tests.Features.InvestmentPortfolios
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioRepository>());
 
             context.InvestmentPortfolios.AddRange(
                 new InvestmentPortfolio { Id = 1, Name = "User1 Portfolio", UserId = "user1" },
@@ -46,7 +52,7 @@ namespace InvestmentApp.Unit.Tests.Features.InvestmentPortfolios
             );
             await context.SaveChangesAsync();
 
-            var repository = new InvestmentPortfolioRepository(context);
+            var repository = new InvestmentPortfolioRepository(context, factoryRepMoq.Object);
             var handler = new GetAllInvestmentPortFolioWithIncludeByUserQueryHandler(repository, _mapper);
 
             var query = new GetAllInvestmentPortFolioWithIncludeByUserQuery { UserId = "user1" };
@@ -64,13 +70,16 @@ namespace InvestmentApp.Unit.Tests.Features.InvestmentPortfolios
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioRepository>());
 
             context.InvestmentPortfolios.AddRange(
                 new InvestmentPortfolio { Id = 1, Name = "Another Portfolio", UserId = "userX" }
             );
             await context.SaveChangesAsync();
 
-            var repository = new InvestmentPortfolioRepository(context);
+            var repository = new InvestmentPortfolioRepository(context, factoryRepMoq.Object);
             var handler = new GetAllInvestmentPortFolioWithIncludeByUserQueryHandler(repository, _mapper);
 
             var query = new GetAllInvestmentPortFolioWithIncludeByUserQuery { UserId = "userNotFound" };

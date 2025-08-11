@@ -7,6 +7,9 @@ using InvestmentApp.Core.Domain.Entities;
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace InvestmentApp.Unit.Tests.Features.Asset
 {
@@ -37,6 +40,13 @@ namespace InvestmentApp.Unit.Tests.Features.Asset
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
+
+            var factoryIARepMoq = new Mock<ILoggerFactory>();
+            factoryIARepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentAssetRepository>());
 
             var type = new Core.Domain.Entities.AssetType { Id = 1, Name = "Crypto" };
             context.AssetTypes.Add(type);
@@ -64,9 +74,9 @@ namespace InvestmentApp.Unit.Tests.Features.Asset
             await context.SaveChangesAsync();
 
             var handler = new GetAllAssetsByPortfolioIdQueryHandler(
-                new AssetRepository(context),
+                new AssetRepository(context, factoryRepMoq.Object),
                 _mapper,
-                new InvestmentAssetRepository(context));
+                new InvestmentAssetRepository(context, factoryIARepMoq.Object));
 
             var query = new GetAllAssetsByPortfolioIdQuery { PortfolioId = portfolio.Id };
 
@@ -84,15 +94,22 @@ namespace InvestmentApp.Unit.Tests.Features.Asset
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
+
+            var factoryIARepMoq = new Mock<ILoggerFactory>();
+            factoryIARepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentAssetRepository>());
 
             var portfolio = new InvestmentPortfolio { Id = 2, UserId = "user2", Name = "Empty Portfolio" };
             context.InvestmentPortfolios.Add(portfolio);
             await context.SaveChangesAsync();
 
             var handler = new GetAllAssetsByPortfolioIdQueryHandler(
-                new AssetRepository(context),
+                new AssetRepository(context, factoryRepMoq.Object),
                 _mapper,
-                new InvestmentAssetRepository(context));
+                new InvestmentAssetRepository(context, factoryIARepMoq.Object));
 
             var query = new GetAllAssetsByPortfolioIdQuery { PortfolioId = portfolio.Id };
 
@@ -108,6 +125,13 @@ namespace InvestmentApp.Unit.Tests.Features.Asset
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
+
+            var factoryIARepMoq = new Mock<ILoggerFactory>();
+            factoryIARepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentAssetRepository>());
 
             var crypto = new Core.Domain.Entities.AssetType { Id = 1, Name = "Crypto" };
             var fiat = new Core.Domain.Entities.AssetType { Id = 2, Name = "Fiat" };
@@ -127,9 +151,9 @@ namespace InvestmentApp.Unit.Tests.Features.Asset
             await context.SaveChangesAsync();
 
             var handler = new GetAllAssetsByPortfolioIdQueryHandler(
-                new AssetRepository(context),
+                new AssetRepository(context, factoryRepMoq.Object),
                 _mapper,
-                new InvestmentAssetRepository(context));
+                new InvestmentAssetRepository(context, factoryIARepMoq.Object));
 
             var query = new GetAllAssetsByPortfolioIdQuery
             {
@@ -151,6 +175,13 @@ namespace InvestmentApp.Unit.Tests.Features.Asset
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
+
+            var factoryIARepMoq = new Mock<ILoggerFactory>();
+            factoryIARepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentAssetRepository>());
 
             var type = new Core.Domain.Entities.AssetType { Id = 1, Name = "Ordenables" };
             context.AssetTypes.Add(type);
@@ -184,9 +215,9 @@ namespace InvestmentApp.Unit.Tests.Features.Asset
             await context.SaveChangesAsync();
 
             var handler = new GetAllAssetsByPortfolioIdQueryHandler(
-                new AssetRepository(context),
+                new AssetRepository(context, factoryRepMoq.Object),
                 _mapper,
-                new InvestmentAssetRepository(context));
+                new InvestmentAssetRepository(context, factoryIARepMoq.Object));
 
             var query = new GetAllAssetsByPortfolioIdQuery
             {

@@ -5,6 +5,7 @@ using InvestmentApp.Core.Application.Interfaces;
 using InvestmentApp.Core.Domain.Entities;
 using InvestmentApp.Core.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace InvestmentApp.Core.Application.Services
 {
@@ -12,26 +13,35 @@ namespace InvestmentApp.Core.Application.Services
     {
         private readonly IInvestmentPortfolioRepository _investmentPortfolioRepository;
         private readonly IMapper _mapper;
-
-        public InvestmentPortfolioService(IInvestmentPortfolioRepository investmentPortfolioRepository, IMapper mapper) : base(investmentPortfolioRepository, mapper)
+        private readonly ILogger<InvestmentPortfolioService> _logger;
+        public InvestmentPortfolioService(IInvestmentPortfolioRepository investmentPortfolioRepository, IMapper mapper, ILoggerFactory loggerFactory) 
+            : base(investmentPortfolioRepository, mapper, loggerFactory.CreateLogger<InvestmentPortfolioService>())
         {
             _investmentPortfolioRepository = investmentPortfolioRepository;
             _mapper = mapper;
+            _logger = loggerFactory.CreateLogger<InvestmentPortfolioService>();
         }       
         public override async Task<InvestmentPortfolioDto?> GetById(int id)
         {
             try
             {
+                _logger.LogInformation("Retrieving InvestmentPortfolio by Id: {Id}", id);
                 var listEntitiesQuery = _investmentPortfolioRepository.GetAllQuery();
+
+                _logger.LogInformation("Executing query to find InvestmentPortfolio with Id: {Id}", id);
                 var entity = await listEntitiesQuery.FirstOrDefaultAsync(a => a.Id == id);
 
-
+                _logger.LogInformation("InvestmentPortfolio retrieval completed. Id: {Id}", id);
                 if (entity == null)
                 {
+                    _logger.LogWarning("No InvestmentPortfolio found for Id: {Id}", id);
                     return null;
                 }
 
+                _logger.LogInformation("Mapping InvestmentPortfolio to InvestmentPortfolioDto");
                 var dto = _mapper.Map<InvestmentPortfolioDto>(entity);
+
+                _logger.LogInformation("Returning InvestmentPortfolioDto for Id: {Id}", id);
                 return dto;
             }
             catch (Exception)

@@ -6,6 +6,9 @@ using InvestmentApp.Core.Domain.Entities;
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace InvestmentApp.Unit.Tests.Services
 {
@@ -35,9 +38,17 @@ namespace InvestmentApp.Unit.Tests.Services
 
         private InvestmentPortfolioService CreateService()
         {
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioService>());
+
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioRepository>());
+
             var context = new InvestmentAppContext(_dbOptions);
-            var repository = new InvestmentPortfolioRepository(context);
-            return new InvestmentPortfolioService(repository, _mapper);
+            var repository = new InvestmentPortfolioRepository(context, factoryRepMoq.Object);
+            return new InvestmentPortfolioService(repository, _mapper, factoryMoq.Object);
         }
 
         [Fact]

@@ -3,6 +3,9 @@ using InvestmentApp.Core.Application.Features.AssetsHistories.Commands.CreateAss
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace InvestmentApp.Unit.Tests.Features.AssetsHistories
 {
@@ -22,12 +25,15 @@ namespace InvestmentApp.Unit.Tests.Features.AssetsHistories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetHistoryRepository>());
 
             var asset = new Core.Domain.Entities.Asset { Id = 1, Name = "Bitcoin", Symbol = "BTC", AssetTypeId = 1 };
             context.Assets.Add(asset);
             await context.SaveChangesAsync();
 
-            var repository = new AssetHistoryRepository(context);
+            var repository = new AssetHistoryRepository(context, factoryRepMoq.Object);
             var handler = new CreateAssetHistoryCommandHandler(repository);
 
             var command = new CreateAssetHistoryCommand
@@ -55,8 +61,11 @@ namespace InvestmentApp.Unit.Tests.Features.AssetsHistories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetHistoryRepository>());
 
-            var repository = new AssetHistoryRepository(context);
+            var repository = new AssetHistoryRepository(context, factoryRepMoq.Object);
             var handler = new CreateAssetHistoryCommandHandler(repository);
 
             var command = new CreateAssetHistoryCommand
