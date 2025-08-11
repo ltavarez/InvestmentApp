@@ -7,6 +7,9 @@ using InvestmentApp.Core.Domain.Entities;
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace InvestmentApp.Unit.Tests.Features.InvestmentAssets
 {
@@ -39,6 +42,9 @@ namespace InvestmentApp.Unit.Tests.Features.InvestmentAssets
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentAssetRepository>());
 
             var userId = "user-test";
 
@@ -63,7 +69,7 @@ namespace InvestmentApp.Unit.Tests.Features.InvestmentAssets
             context.InvestmentAssets.Add(investmentAsset);
             await context.SaveChangesAsync();
 
-            var handler = new GetByIdInvestmentAssetQueryHandler(new InvestmentAssetRepository(context), _mapper);
+            var handler = new GetByIdInvestmentAssetQueryHandler(new InvestmentAssetRepository(context, factoryRepMoq.Object), _mapper);
 
             var query = new GetByIdInvestmentAssetQuery
             {
@@ -86,8 +92,11 @@ namespace InvestmentApp.Unit.Tests.Features.InvestmentAssets
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentAssetRepository>());
 
-            var handler = new GetByIdInvestmentAssetQueryHandler(new InvestmentAssetRepository(context), _mapper);
+            var handler = new GetByIdInvestmentAssetQueryHandler(new InvestmentAssetRepository(context, factoryRepMoq.Object), _mapper);
 
             var query = new GetByIdInvestmentAssetQuery
             {

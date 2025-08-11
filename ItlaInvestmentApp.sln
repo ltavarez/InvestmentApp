@@ -35,6 +35,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestmentApp.Unit.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvestmentApp.Integration.Tests", "InvestmentApp.Integration.Tests\InvestmentApp.Integration.Tests.csproj", "{829DEA7D-916E-4177-88FD-D7D7CCD0B3AF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AzureFunctions", "AzureFunctions", "{9C4555BF-429A-4B2C-BA44-F9EDBD6B68E6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VerifyNewAssetValue", "VerifyNewAssetValue\VerifyNewAssetValue.csproj", "{E66C4EED-4EFC-618B-4210-7B8FAF3173DF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +81,10 @@ Global
 		{829DEA7D-916E-4177-88FD-D7D7CCD0B3AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{829DEA7D-916E-4177-88FD-D7D7CCD0B3AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{829DEA7D-916E-4177-88FD-D7D7CCD0B3AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E66C4EED-4EFC-618B-4210-7B8FAF3173DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E66C4EED-4EFC-618B-4210-7B8FAF3173DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E66C4EED-4EFC-618B-4210-7B8FAF3173DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E66C4EED-4EFC-618B-4210-7B8FAF3173DF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -97,6 +105,8 @@ Global
 		{3D4AA8CF-951C-48FC-95F7-5636AB49E232} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{8A467853-3B5C-49AF-96BD-68471039B5EB} = {3D4AA8CF-951C-48FC-95F7-5636AB49E232}
 		{829DEA7D-916E-4177-88FD-D7D7CCD0B3AF} = {3D4AA8CF-951C-48FC-95F7-5636AB49E232}
+		{9C4555BF-429A-4B2C-BA44-F9EDBD6B68E6} = {E8B72C8D-A5E9-4E08-B7D0-EE5F0E1FD990}
+		{E66C4EED-4EFC-618B-4210-7B8FAF3173DF} = {9C4555BF-429A-4B2C-BA44-F9EDBD6B68E6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C41C9C42-C3FF-4AC2-B60F-E4420E06DB8E}

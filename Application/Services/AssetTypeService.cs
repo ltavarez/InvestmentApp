@@ -5,6 +5,7 @@ using InvestmentApp.Core.Application.Interfaces;
 using InvestmentApp.Core.Domain.Entities;
 using InvestmentApp.Core.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace InvestmentApp.Core.Application.Services
 {
@@ -12,19 +13,25 @@ namespace InvestmentApp.Core.Application.Services
     {
         private readonly IAssetTypeRepository _assetTypeRepository;
         private readonly IMapper _mapper;
-        public AssetTypeService(IAssetTypeRepository assetTypeRepository, IMapper mapper) : base(assetTypeRepository, mapper)
+        private readonly ILogger<AssetTypeService> _logger;
+        public AssetTypeService(IAssetTypeRepository assetTypeRepository, IMapper mapper, ILoggerFactory loggerFactory)
+            : base(assetTypeRepository, mapper, loggerFactory.CreateLogger<AssetTypeService>())
         {
             _assetTypeRepository = assetTypeRepository;
             _mapper = mapper;
+            _logger = loggerFactory.CreateLogger<AssetTypeService>();
         }
         public async Task<List<AssetTypeDto>> GetAllWithInclude()
         {
             try
             {
+                _logger.LogInformation("Retrieving all AssetTypes with included Assets");
                 var listEntitiesQuery = _assetTypeRepository.GetAllQueryWithInclude(["Assets"]);
 
+                _logger.LogInformation("Projecting AssetType entities to DTOs");
                 var listEntityDtos = await listEntitiesQuery.ProjectTo<AssetTypeDto>(_mapper.ConfigurationProvider).ToListAsync();
 
+                _logger.LogInformation("Returning list of AssetType DTOs");
                 return listEntityDtos;
             }
             catch (Exception)

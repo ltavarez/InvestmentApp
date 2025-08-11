@@ -3,6 +3,7 @@ using InvestmentApp.Core.Application.Interfaces;
 using InvestmentApp.Core.Domain.Settings;
 using InvestmentApp.Infrastructure.Identity.Entities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -16,15 +17,18 @@ namespace InvestmentApp.Infrastructure.Identity.Services
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly JwtSettings _jwtSettings;
-        public AccountServiceForWebApi(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IEmailService emailService, IOptions<JwtSettings> jwtSettings)
-            : base(userManager, emailService)
+        private readonly ILogger _accountServiceApiLogger;
+        public AccountServiceForWebApi(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IEmailService emailService, IOptions<JwtSettings> jwtSettings, ILoggerFactory loggerFactory)
+            : base(userManager, emailService, loggerFactory.CreateLogger<AccountServiceForWebApi>())
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _jwtSettings = jwtSettings.Value;
+            _accountServiceApiLogger = loggerFactory.CreateLogger<AccountServiceForWebApi>();
         }
         public async Task<LoginResponseForApiDto> AuthenticateAsync(LoginDto loginDto)
         {
+            _accountServiceApiLogger.LogInformation("Authenticating user {UserName} for API access", loginDto.UserName);
             LoginResponseForApiDto response = new()
             {
                 LastName = "",
@@ -33,10 +37,14 @@ namespace InvestmentApp.Infrastructure.Identity.Services
                 Errors = []
             };
 
+            _accountServiceApiLogger.LogInformation("Attempting to find user by username: {UserName}", loginDto.UserName);
             var user = await _userManager.FindByNameAsync(loginDto.UserName);
+            _accountServiceApiLogger.LogInformation("User found: {UserName} - EmailConfirmed: {EmailConfirmed}",
+                user?.UserName, user?.EmailConfirmed);
 
             if (user == null)
             {
+                _accountServiceApiLogger.LogWarning("No account registered with username: {UserName}", loginDto.UserName);
                 response.HasError = true;
                 response.Errors.Add($"There is no acccount registered with this username: {loginDto.UserName}");
                 return response;
@@ -44,18 +52,23 @@ namespace InvestmentApp.Infrastructure.Identity.Services
 
             if (!user.EmailConfirmed)
             {
+                _accountServiceApiLogger.LogWarning("Account {UserName} is not active, email confirmation required", loginDto.UserName);
                 response.HasError = true;
                 response.Errors.Add($"This account {loginDto.UserName} is not active, you should check your email");
                 return response;
             }
 
+            _accountServiceApiLogger.LogInformation("Attempting to sign in user {UserName}", loginDto.UserName);
             var result = await _signInManager.PasswordSignInAsync(user.UserName ?? "", loginDto.Password, false, true);
 
+            _accountServiceApiLogger.LogInformation("Sign in result for user {UserName}: {Succeeded}, LockedOut: {IsLockedOut}",
+                loginDto.UserName, result.Succeeded, result.IsLockedOut);
             if (!result.Succeeded)
             {
                 response.HasError = true;
                 if (result.IsLockedOut)
                 {
+                    _accountServiceApiLogger.LogWarning("User {UserName} is locked out due to multiple failed attempts", loginDto.UserName);
                     response.Errors.Add($"Your account {loginDto.UserName} has been locked due to multiple failed attempts." +
                         $" Please try again in 10 minutes. If you don’t remember your password, you can go through the password " +
                         $"reset process.");
@@ -67,6 +80,7 @@ namespace InvestmentApp.Infrastructure.Identity.Services
                 return response;
             }
 
+            _accountServiceApiLogger.LogInformation("User {UserName} signed in successfully", loginDto.UserName);
             JwtSecurityToken jwtSecurityToken = await GenerateJwtToken(user);
 
             response.Name = user.Name;
@@ -78,6 +92,7 @@ namespace InvestmentApp.Infrastructure.Identity.Services
 
         public override async Task<RegisterResponseDto> RegisterUser(SaveUserDto saveDto, string? origin, bool? isApi = false)
         {
+            _accountServiceApiLogger.LogInformation("Registering user {UserName} for API access", saveDto.UserName);
             return await base.RegisterUser(saveDto, null, isApi);
         }
 
@@ -87,7 +102,7 @@ namespace InvestmentApp.Infrastructure.Identity.Services
         }
 
         public override async Task<UserResponseDto> ForgotPasswordAsync(ForgotPasswordRequestDto request, bool? isApi = false)
-        { 
+        {
             return await base.ForgotPasswordAsync(request, isApi);
         }
 

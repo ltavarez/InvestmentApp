@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using InvestmentApp.Core.Application.Interfaces;
 using InvestmentApp.Core.Domain.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace InvestmentApp.Core.Application.Services
 {
@@ -10,23 +11,32 @@ namespace InvestmentApp.Core.Application.Services
     {
         private readonly IGenericRepository<Entity> _repository;
         private readonly IMapper _mapper;
+        private readonly ILogger<GenericService<Entity, DtoModel>> _logger;
 
-        public GenericService(IGenericRepository<Entity> repository, IMapper mapper)
+        public GenericService(IGenericRepository<Entity> repository, IMapper mapper, ILogger<GenericService<Entity, DtoModel>> logger)
         {
             _repository = repository;
             _mapper = mapper;
+            _logger = logger;
         }
         public virtual async Task<DtoModel?> AddAsync(DtoModel dto)
         {
             try
             {
+                _logger.LogInformation("Adding new entity of type {EntityType}", typeof(Entity).Name);
                 Entity entity = _mapper.Map<Entity>(dto);
+
+                _logger.LogInformation("Mapped DTO to entity: {Entity}", entity);
                 Entity? returnEntity = await _repository.AddAsync(entity);
+
+                _logger.LogInformation("Entity added successfully, returning mapped DTO");
                 if (returnEntity == null)
                 {
+                    _logger.LogWarning("Failed to add entity of type {EntityType}", typeof(Entity).Name);
                     return null;
                 }
 
+                _logger.LogInformation("Adding new entity of type {EntityType}", typeof(Entity).Name);
                 return _mapper.Map<DtoModel>(returnEntity);
             }
             catch (Exception)

@@ -6,6 +6,7 @@ using InvestmentApp.Core.Domain.Common.Enums;
 using InvestmentApp.Core.Domain.Entities;
 using InvestmentApp.Core.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace InvestmentApp.Core.Application.Services
 {
@@ -14,28 +15,36 @@ namespace InvestmentApp.Core.Application.Services
         private readonly IAssetRepository _assetRepository;
         private readonly IInvestmentAssetRepository _investmentAssetRepository;
         private readonly IMapper _mapper;
-        public AssetService(IAssetRepository assetRepository, IInvestmentAssetRepository investmentAssetRepository, IMapper mapper) : base(assetRepository, mapper)
+        private readonly ILogger<AssetService> _logger;
+        public AssetService(IAssetRepository assetRepository, IInvestmentAssetRepository investmentAssetRepository, IMapper mapper, ILoggerFactory loggerFactory) 
+            : base(assetRepository, mapper, loggerFactory.CreateLogger<AssetService>())
         {
             _assetRepository = assetRepository;
             _investmentAssetRepository = investmentAssetRepository;
             _mapper = mapper;
+            _logger = loggerFactory.CreateLogger<AssetService>();
         }
-
         public override async Task<AssetDto?> GetById(int id)
         {
             try
             {
+                _logger.LogInformation("Retrieving Asset with ID: {Id}", id);
                 var listEntitiesQuery = _assetRepository.GetAllQueryWithInclude(["AssetType"]);
 
+                _logger.LogInformation("Querying Asset repository for entity with ID: {Id}", id);
                 var entity = await listEntitiesQuery.FirstOrDefaultAsync(a => a.Id == id);
 
+                _logger.LogInformation("Entity retrieved: {Entity}", entity != null ? "Found" : "Not Found");
                 if (entity == null)
                 {
+                    _logger.LogWarning("Asset with ID: {Id} not found", id);
                     return null;
                 }
 
+                _logger.LogInformation("Mapping entity to DTO for Asset with ID: {Id}", id);    
                 var dto = _mapper.Map<AssetDto>(entity);
 
+                _logger.LogInformation("Returning DTO for Asset with ID: {Id}", id);
                 return dto;
             }
             catch (Exception)

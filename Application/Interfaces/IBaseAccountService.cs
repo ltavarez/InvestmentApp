@@ -1,4 +1,5 @@
 ﻿using InvestmentApp.Core.Application.Dtos.User;
+using Microsoft.Extensions.Logging;
 
 namespace InvestmentApp.Core.Application.Interfaces
 {

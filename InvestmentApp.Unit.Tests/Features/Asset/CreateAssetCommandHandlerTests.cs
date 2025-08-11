@@ -1,8 +1,12 @@
 ﻿using FluentAssertions;
 using InvestmentApp.Core.Application.Features.Assets.Commands.CreateAsset;
+using InvestmentApp.Core.Application.Services;
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace InvestmentApp.Unit.Tests.Features.Asset
 {
@@ -22,14 +26,20 @@ namespace InvestmentApp.Unit.Tests.Features.Asset
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<CreateAssetCommandHandler>());
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
 
             // Agregamos el AssetType necesario como FK
-            var assetType = new Core.Domain.Entities.AssetType { Id = 1,Name = "Coin" };
+            var assetType = new Core.Domain.Entities.AssetType { Id = 1, Name = "Coin" };
             context.AssetTypes.Add(assetType);
             await context.SaveChangesAsync();
 
-            var repository = new AssetRepository(context);
-            var handler = new CreateAssetCommandHandler(repository);
+            var repository = new AssetRepository(context, factoryRepMoq.Object);
+            var handler = new CreateAssetCommandHandler(repository, factoryMoq.Object);
 
             var command = new CreateAssetCommand
             {
@@ -58,16 +68,22 @@ namespace InvestmentApp.Unit.Tests.Features.Asset
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<CreateAssetCommandHandler>());
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
 
-            var repository = new AssetRepository(context);
-            var handler = new CreateAssetCommandHandler(repository);
+            var repository = new AssetRepository(context, factoryRepMoq.Object);
+            var handler = new CreateAssetCommandHandler(repository, factoryMoq.Object);
 
             var command = new CreateAssetCommand
             {
                 Name = "Dogecoin",
                 Symbol = "DOGE",
                 Description = "Meme coin",
-                AssetTypeId = 999 
+                AssetTypeId = 999
             };
 
             // Act

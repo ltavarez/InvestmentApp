@@ -2,6 +2,8 @@
 using FluentAssertions;
 using InvestmentApp.Core.Application.Services;
 using InvestmentApp.Core.Domain.Interfaces;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace InvestmentApp.Unit.Tests.Services
@@ -27,6 +29,7 @@ namespace InvestmentApp.Unit.Tests.Services
         public GenericServiceTests()
         {
             _mockRepo = new Mock<IGenericRepository<DummyEntity>>();
+            ILogger<GenericService<DummyEntity, DummyDto>> loggerMock = new NullLogger<GenericService<DummyEntity, DummyDto>>();
 
             var config = new MapperConfiguration(cfg =>
             {
@@ -34,7 +37,7 @@ namespace InvestmentApp.Unit.Tests.Services
             });
 
             _mapper = config.CreateMapper();
-            _service = new GenericService<DummyEntity, DummyDto>(_mockRepo.Object, _mapper);
+            _service = new GenericService<DummyEntity, DummyDto>(_mockRepo.Object, _mapper, loggerMock);
         }
 
         [Fact]
