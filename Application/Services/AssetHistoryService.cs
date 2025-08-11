@@ -5,6 +5,7 @@ using InvestmentApp.Core.Application.Interfaces;
 using InvestmentApp.Core.Domain.Entities;
 using InvestmentApp.Core.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace InvestmentApp.Core.Application.Services
 {
@@ -12,16 +13,20 @@ namespace InvestmentApp.Core.Application.Services
     {
         private readonly IAssetHistoryRepository _assetHistoryRepository;
         private readonly IMapper _mapper;
-        public AssetHistoryService(IAssetHistoryRepository assetHistoryRepository, IMapper mapper) : base(assetHistoryRepository, mapper)
+        private readonly ILogger<AssetHistoryService> _logger;
+        public AssetHistoryService(IAssetHistoryRepository assetHistoryRepository, IMapper mapper, ILoggerFactory loggerFactory)
+            : base(assetHistoryRepository, mapper, loggerFactory.CreateLogger<AssetHistoryService>())
         {
             _assetHistoryRepository = assetHistoryRepository;
             _mapper = mapper;
+            _logger = loggerFactory.CreateLogger<AssetHistoryService>();
         }
 
         public override async Task<AssetHistoryDto?> UpdateAsync(AssetHistoryDto dto, int id)
         {
             try
             {
+                _logger.LogInformation("Updating AssetHistory with ID: {Id}", id);
                 var entity = await GetById(id);
                 if (entity == null)
                 {

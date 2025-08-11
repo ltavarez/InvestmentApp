@@ -8,6 +8,9 @@ using InvestmentApp.Core.Domain.Entities;
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace InvestmentApp.Unit.Tests.Services
 {
@@ -36,10 +39,22 @@ namespace InvestmentApp.Unit.Tests.Services
 
         private AssetService CreateService()
         {
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetService>());
+
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
+
+            var factoryIARepMoq = new Mock<ILoggerFactory>();
+            factoryIARepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentAssetRepository>());
+
             var context = new InvestmentAppContext(_dbOptions);
-            var assetRepo = new AssetRepository(context);
-            var investmentAssetRepo = new InvestmentAssetRepository(context);
-            return new AssetService(assetRepo, investmentAssetRepo, _mapper);
+            var assetRepo = new AssetRepository(context, factoryRepMoq.Object);
+            var investmentAssetRepo = new InvestmentAssetRepository(context, factoryIARepMoq.Object);
+            return new AssetService(assetRepo, investmentAssetRepo, _mapper,factoryMoq.Object);
         }
 
         [Fact]

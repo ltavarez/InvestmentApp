@@ -1,8 +1,11 @@
 ﻿using FluentAssertions;
+using InvestmentApp.Core.Application.Services;
 using InvestmentApp.Core.Domain.Entities;
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace InvestmentApp.Integration.Tests.Persistence.Repositories
 {
@@ -22,7 +25,9 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            var repo = new GenericRepository<AssetType>(context);
+            ILogger<GenericRepository<AssetType>> loggerMock = new NullLogger<GenericRepository<AssetType>>();
+
+            var repo = new GenericRepository<AssetType>(context, loggerMock);
             var entity = new AssetType { Id = 0, Name = "Bond", Description = "Fixed Income" };
 
             // Act
@@ -38,7 +43,8 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            var repo = new GenericRepository<AssetType>(context);
+            ILogger<GenericRepository<AssetType>> loggerMock = new NullLogger<GenericRepository<AssetType>>();
+            var repo = new GenericRepository<AssetType>(context, loggerMock);
             var items = new List<AssetType>
             {
                 new AssetType {Id = 0, Name = "Crypto" },
@@ -58,10 +64,11 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            ILogger<GenericRepository<AssetType>> loggerMock = new NullLogger<GenericRepository<AssetType>>();
             var entity = new AssetType { Id = 0, Name = "ETF" };
             context.AssetTypes.Add(entity);
             await context.SaveChangesAsync();
-            var repo = new GenericRepository<AssetType>(context);
+            var repo = new GenericRepository<AssetType>(context, loggerMock);
 
             // Act
             var result = await repo.GetById(entity.Id);
@@ -76,7 +83,8 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            var repo = new GenericRepository<AssetType>(context);
+            ILogger<GenericRepository<AssetType>> loggerMock = new NullLogger<GenericRepository<AssetType>>();
+            var repo = new GenericRepository<AssetType>(context, loggerMock);
 
             // Act
             var result = await repo.GetById(999);
@@ -90,11 +98,12 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            ILogger<GenericRepository<AssetType>> loggerMock = new NullLogger<GenericRepository<AssetType>>();
             var entity = new AssetType { Id = 0, Name = "Mutual Fund" };
             context.AssetTypes.Add(entity);
             await context.SaveChangesAsync();
 
-            var repo = new GenericRepository<AssetType>(context);
+            var repo = new GenericRepository<AssetType>(context, loggerMock);
             entity.Name = "Updated Fund";
 
             // Act
@@ -110,7 +119,8 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            var repo = new GenericRepository<AssetType>(context);
+            ILogger<GenericRepository<AssetType>> loggerMock = new NullLogger<GenericRepository<AssetType>>();
+            var repo = new GenericRepository<AssetType>(context, loggerMock);
             var entity = new AssetType { Id = 999, Name = "Nonexistent" };
 
             // Act
@@ -125,10 +135,11 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            ILogger<GenericRepository<AssetType>> loggerMock = new NullLogger<GenericRepository<AssetType>>();
             var entity = new AssetType { Id = 0, Name = "REIT" };
             context.AssetTypes.Add(entity);
             await context.SaveChangesAsync();
-            var repo = new GenericRepository<AssetType>(context);
+            var repo = new GenericRepository<AssetType>(context, loggerMock);
 
             // Act
             await repo.DeleteAsync(entity.Id);
@@ -143,7 +154,8 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            var repo = new GenericRepository<AssetType>(context);
+            ILogger<GenericRepository<AssetType>> loggerMock = new NullLogger<GenericRepository<AssetType>>();
+            var repo = new GenericRepository<AssetType>(context, loggerMock);
 
             // Act
             Func<Task> act = async () => await repo.DeleteAsync(999);
@@ -157,12 +169,13 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            ILogger<GenericRepository<AssetType>> loggerMock = new NullLogger<GenericRepository<AssetType>>();
             context.AssetTypes.AddRange(
                 new AssetType { Id = 0, Name = "Cash" },
                 new AssetType { Id = 0, Name = "Gold" }
             );
             await context.SaveChangesAsync();
-            var repo = new GenericRepository<AssetType>(context);
+            var repo = new GenericRepository<AssetType>(context, loggerMock);
 
             // Act
             var result = await repo.GetAllList();
@@ -176,6 +189,7 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            ILogger<GenericRepository<AssetType>> loggerMock = new NullLogger<GenericRepository<AssetType>>();
             context.AssetTypes.Add(new AssetType
             {
                 Id = 0,
@@ -186,7 +200,7 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
                 ]
             });
             await context.SaveChangesAsync();
-            var repo = new GenericRepository<AssetType>(context);
+            var repo = new GenericRepository<AssetType>(context, loggerMock);
 
             // Act
             var result = await repo.GetAllListWithInclude(["Assets"]);
@@ -201,10 +215,11 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            ILogger<GenericRepository<AssetType>> loggerMock = new NullLogger<GenericRepository<AssetType>>();
             context.AssetTypes.Add(new AssetType { Id = 0, Name = "Index Fund" });
             await context.SaveChangesAsync();
 
-            var repo = new GenericRepository<AssetType>(context);
+            var repo = new GenericRepository<AssetType>(context, loggerMock);
 
             // Act
             var query = repo.GetAllQuery();
@@ -219,6 +234,7 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            ILogger<GenericRepository<AssetType>> loggerMock = new NullLogger<GenericRepository<AssetType>>();
             context.AssetTypes.Add(new AssetType
             {
                 Id = 0,
@@ -229,7 +245,7 @@ namespace InvestmentApp.Integration.Tests.Persistence.Repositories
                 ]
             });
             await context.SaveChangesAsync();
-            var repo = new GenericRepository<AssetType>(context);
+            var repo = new GenericRepository<AssetType>(context, loggerMock);
 
             // Act
             var query = repo.GetAllQueryWithInclude(["Assets"]);

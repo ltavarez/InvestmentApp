@@ -7,6 +7,9 @@ using InvestmentApp.Core.Domain.Entities;
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace InvestmentApp.Unit.Tests.Services
 {
@@ -31,9 +34,17 @@ namespace InvestmentApp.Unit.Tests.Services
         }
         private AssetTypeService CreateService()
         {
+            var factoryMock = new Mock<ILoggerFactory>();
+            factoryMock.Setup(f => f.CreateLogger(It.IsAny<string>()))
+                       .Returns(new NullLogger<AssetTypeService>());
+
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetTypeRepository>());
+
             var context = new InvestmentAppContext(_dbOptions);
-            var repo = new AssetTypeRepository(context);
-            return new AssetTypeService(repo, _mapper);
+            var repo = new AssetTypeRepository(context, factoryRepMoq.Object);
+            return new AssetTypeService(repo, _mapper, factoryMock.Object);
         }
 
         [Fact]
@@ -169,10 +180,18 @@ namespace InvestmentApp.Unit.Tests.Services
         public async Task GetAll_Should_Return_Empty_When_Exception()
         {
             // Arrange
+            var factoryMock = new Mock<ILoggerFactory>();
+            factoryMock.Setup(f => f.CreateLogger(It.IsAny<string>()))
+                       .Returns(new NullLogger<AssetTypeService>());
+
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetTypeRepository>());
+
             var context = new InvestmentAppContext(_dbOptions);
             await context.DisposeAsync();
-            var repo = new AssetTypeRepository(context);
-            var service = new AssetTypeService(repo, _mapper);
+            var repo = new AssetTypeRepository(context, factoryRepMoq.Object);
+            var service = new AssetTypeService(repo, _mapper, factoryMock.Object);
 
             // Act
             var result = await service.GetAll();
@@ -186,7 +205,12 @@ namespace InvestmentApp.Unit.Tests.Services
         {
             //Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-
+            var factoryMock = new Mock<ILoggerFactory>();
+            factoryMock.Setup(f => f.CreateLogger(It.IsAny<string>()))
+                       .Returns(new NullLogger<AssetTypeService>());
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetTypeRepository>());
             var assetType = new AssetType
             {
                 Id = 0,
@@ -204,7 +228,7 @@ namespace InvestmentApp.Unit.Tests.Services
             context.Assets.AddRange(assets);
             await context.SaveChangesAsync();
 
-            var service = new AssetTypeService(new AssetTypeRepository(context), _mapper);
+            var service = new AssetTypeService(new AssetTypeRepository(context, factoryRepMoq.Object), _mapper,factoryMock.Object);
 
 
             //Act
@@ -219,9 +243,15 @@ namespace InvestmentApp.Unit.Tests.Services
         public async Task GetAllWithInclude_Should_Return_Empty_On_Exception()
         {
             // Arrange
+            var factoryMock = new Mock<ILoggerFactory>();
+            factoryMock.Setup(f => f.CreateLogger(It.IsAny<string>()))
+                       .Returns(new NullLogger<AssetTypeService>());
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetTypeRepository>());
             var context = new InvestmentAppContext(_dbOptions);
             await context.DisposeAsync();
-            var service = new AssetTypeService(new AssetTypeRepository(context), _mapper);
+            var service = new AssetTypeService(new AssetTypeRepository(context, factoryRepMoq.Object), _mapper, factoryMock.Object);
 
             // Act
             var result = await service.GetAllWithInclude();

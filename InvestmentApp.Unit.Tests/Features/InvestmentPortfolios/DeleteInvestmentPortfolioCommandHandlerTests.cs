@@ -5,6 +5,9 @@ using InvestmentApp.Core.Domain.Entities;
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace InvestmentApp.Unit.Tests.Features.InvestmentPortfolios
 {
@@ -24,6 +27,9 @@ namespace InvestmentApp.Unit.Tests.Features.InvestmentPortfolios
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioRepository>());
 
             var portfolio = new InvestmentPortfolio
             {
@@ -36,7 +42,7 @@ namespace InvestmentApp.Unit.Tests.Features.InvestmentPortfolios
             context.InvestmentPortfolios.Add(portfolio);
             await context.SaveChangesAsync();
 
-            var repository = new InvestmentPortfolioRepository(context);
+            var repository = new InvestmentPortfolioRepository(context, factoryRepMoq.Object);
             var handler = new DeleteInvestmentPortfolioCommandHandler(repository, null!);
 
             var command = new DeleteInvestmentPortfolioCommand { Id = portfolio.Id };
@@ -55,8 +61,11 @@ namespace InvestmentApp.Unit.Tests.Features.InvestmentPortfolios
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<InvestmentPortfolioRepository>());
 
-            var repository = new InvestmentPortfolioRepository(context);
+            var repository = new InvestmentPortfolioRepository(context, factoryRepMoq.Object);
             var handler = new DeleteInvestmentPortfolioCommandHandler(repository, null!);
 
             var command = new DeleteInvestmentPortfolioCommand { Id = 999 };

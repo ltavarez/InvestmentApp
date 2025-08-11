@@ -5,6 +5,7 @@ using InvestmentApp.Infrastructure.Identity.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Text;
 
 namespace InvestmentApp.Infrastructure.Identity.Services
@@ -13,10 +14,12 @@ namespace InvestmentApp.Infrastructure.Identity.Services
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly IEmailService _emailService;
-        protected BaseAccountService(UserManager<AppUser> userManager, IEmailService emailService)
+        private readonly ILogger _baseAccountServiceLogger;
+        protected BaseAccountService(UserManager<AppUser> userManager, IEmailService emailService, ILogger loggerService)
         {
             _userManager = userManager;
             _emailService = emailService;
+            _baseAccountServiceLogger = loggerService;
         }
 
         public virtual async Task<RegisterResponseDto> RegisterUser(SaveUserDto saveDto, string? origin, bool? isApi = false)
@@ -32,9 +35,11 @@ namespace InvestmentApp.Infrastructure.Identity.Services
                 Errors = []
             };
 
+            _baseAccountServiceLogger.LogInformation("Registering user {UserName} for web access", saveDto.UserName);
             var userWithSameUserName = await _userManager.FindByNameAsync(saveDto.UserName);
             if (userWithSameUserName != null)
             {
+                _baseAccountServiceLogger.LogWarning("Username {UserName} is already taken", saveDto.UserName);
                 response.HasError = true;
                 response.Errors.Add($"this username: {saveDto.UserName} is already taken.");
                 return response;
@@ -43,6 +48,7 @@ namespace InvestmentApp.Infrastructure.Identity.Services
             var userWithSameEmail = await _userManager.FindByEmailAsync(saveDto.Email);
             if (userWithSameEmail != null)
             {
+                _baseAccountServiceLogger.LogWarning("Email {Email} is already taken", saveDto.Email);
                 response.HasError = true;
                 response.Errors.Add($"this email: {saveDto.Email} is already taken.");
                 return response;
@@ -59,7 +65,10 @@ namespace InvestmentApp.Infrastructure.Identity.Services
                 PhoneNumber = saveDto.Phone
             };
 
+            _baseAccountServiceLogger.LogInformation("Creating user {UserName} with email {Email}", saveDto.UserName, saveDto.Email);
             var result = await _userManager.CreateAsync(user, saveDto.Password);
+
+            _baseAccountServiceLogger.LogInformation("User creation result for {UserName}: {Succeeded}", saveDto.UserName, result.Succeeded);
             if (result.Succeeded)
             {
                 await _userManager.AddToRoleAsync(user, saveDto.Role);

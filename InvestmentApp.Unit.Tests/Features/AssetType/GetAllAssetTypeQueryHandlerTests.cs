@@ -6,6 +6,9 @@ using InvestmentApp.Core.Application.Mappings.EntitiesAndDtos;
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace InvestmentApp.Unit.Tests.Features.AssetType
 {
@@ -33,6 +36,9 @@ namespace InvestmentApp.Unit.Tests.Features.AssetType
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetTypeRepository>());
 
             context.AssetTypes.AddRange(
                 new Core.Domain.Entities.AssetType { Id = 1, Name = "Crypto", Description = "Criptomonedas" },
@@ -40,7 +46,7 @@ namespace InvestmentApp.Unit.Tests.Features.AssetType
             );
             await context.SaveChangesAsync();
 
-            var repository = new AssetTypeRepository(context);
+            var repository = new AssetTypeRepository(context, factoryRepMoq.Object);
             var handler = new GetAllAssetTypeQueryHandler(repository, _mapper);
 
             // Act

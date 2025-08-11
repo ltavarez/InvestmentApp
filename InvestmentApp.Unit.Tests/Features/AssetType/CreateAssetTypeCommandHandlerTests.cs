@@ -5,6 +5,8 @@ using InvestmentApp.Core.Domain.Interfaces;
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
@@ -26,7 +28,10 @@ namespace InvestmentApp.Unit.Tests.Features.AssetType
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            var repository = new AssetTypeRepository(context);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetTypeRepository>());
+            var repository = new AssetTypeRepository(context, factoryRepMoq.Object);
             var handler = new CreateAssetTypeCommandHandler(repository);
 
             var command = new CreateAssetTypeCommand

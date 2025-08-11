@@ -5,9 +5,16 @@ using InvestmentApp.Infrastructure.Identity;
 using InvestmentApp.Infrastructure.Persistence;
 using InvestmentApp.Infrastructure.Shared;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext().CreateLogger(); // Configure Serilog for logging
+
+builder.Host.UseSerilog(Log.Logger);// Use Serilog for logging
 
 // Add services to the container.
 

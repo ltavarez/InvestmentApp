@@ -4,6 +4,9 @@ using InvestmentApp.Core.Application.Features.Assets.Commands.DeleteAsset;
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace InvestmentApp.Unit.Tests.Features.Asset
 {
@@ -23,11 +26,14 @@ namespace InvestmentApp.Unit.Tests.Features.Asset
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
             var asset = new Core.Domain.Entities.Asset { Id = 1, Name = "Bitcoin", Symbol = "BTC", AssetTypeId = 1 };
             context.Assets.Add(asset);
             await context.SaveChangesAsync();
 
-            var repository = new AssetRepository(context);
+            var repository = new AssetRepository(context, factoryRepMoq.Object);
             var handler = new DeleteAssetCommandHandler(repository);
 
             var command = new DeleteAssetCommand { Id = 1 };
@@ -46,7 +52,10 @@ namespace InvestmentApp.Unit.Tests.Features.Asset
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            var repository = new AssetRepository(context);
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetRepository>());
+            var repository = new AssetRepository(context, factoryRepMoq.Object);
             var handler = new DeleteAssetCommandHandler(repository);
 
             var command = new DeleteAssetCommand { Id = 999 };

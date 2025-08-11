@@ -7,6 +7,9 @@ using InvestmentApp.Core.Domain.Entities;
 using InvestmentApp.Infrastructure.Persistence.Contexts;
 using InvestmentApp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace InvestmentApp.Unit.Tests.Services
 {
@@ -36,9 +39,17 @@ namespace InvestmentApp.Unit.Tests.Services
 
         private AssetHistoryService CreateService()
         {
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetTypeService>());
+
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetHistoryRepository>());
+
             var context = new InvestmentAppContext(_dbOptions);
-            var repo = new AssetHistoryRepository(context);
-            return new AssetHistoryService(repo, _mapper);
+            var repo = new AssetHistoryRepository(context, factoryRepMoq.Object);
+            return new AssetHistoryService(repo, _mapper, factoryMoq.Object);
         }
 
         [Fact]
@@ -101,7 +112,7 @@ namespace InvestmentApp.Unit.Tests.Services
             // Assert
             updated.Should().NotBeNull();
             updated!.Value.Should().Be(1800m);
-            updated.HistoryValueDate.Should().Be(new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc)); 
+            updated.HistoryValueDate.Should().Be(new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc));
         }
 
         [Fact]
@@ -129,8 +140,14 @@ namespace InvestmentApp.Unit.Tests.Services
         public async Task DeleteAsync_Should_Remove_AssetHistory()
         {
             // Arrange
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetTypeService>());
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetHistoryRepository>());
             using var context = new InvestmentAppContext(_dbOptions);
-           
+
             var asset = new Asset { Id = 0, Symbol = "XAU", Name = "Gold", AssetTypeId = 1 };
             context.Assets.Add(asset);
             await context.SaveChangesAsync();
@@ -144,14 +161,14 @@ namespace InvestmentApp.Unit.Tests.Services
             };
             context.AssetHistories.Add(history);
             await context.SaveChangesAsync();
-            var repo = new AssetHistoryRepository(context);
-            var service = new AssetHistoryService(repo, _mapper);
+            var repo = new AssetHistoryRepository(context,factoryRepMoq.Object);
+            var service = new AssetHistoryService(repo, _mapper, factoryMoq.Object);
 
             //Act
             var result = await service.DeleteAsync(history.Id);
 
             // Assert
-            result.Should().BeTrue();            
+            result.Should().BeTrue();
             var deleted = await context.AssetHistories.FindAsync(history.Id);
             deleted.Should().BeNull();
         }
@@ -227,7 +244,14 @@ namespace InvestmentApp.Unit.Tests.Services
         {
             // Arrange
             using var context = new InvestmentAppContext(_dbOptions);
-            
+            var factoryMoq = new Mock<ILoggerFactory>();
+            factoryMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetTypeService>());
+
+            var factoryRepMoq = new Mock<ILoggerFactory>();
+            factoryRepMoq.Setup(x => x.CreateLogger(It.IsAny<string>()))
+                .Returns(new NullLogger<AssetHistoryRepository>());
+
             var assetType = new AssetType { Id = 0, Name = "Equity" };
             context.AssetTypes.Add(assetType);
             await context.SaveChangesAsync();
@@ -245,8 +269,8 @@ namespace InvestmentApp.Unit.Tests.Services
             });
             await context.SaveChangesAsync();
 
-            var repo = new AssetHistoryRepository(context);
-            var service = new AssetHistoryService(repo, _mapper);
+            var repo = new AssetHistoryRepository(context, factoryRepMoq.Object);
+            var service = new AssetHistoryService(repo, _mapper, factoryMoq.Object);
 
             // Act
             var result = await service.GetAllWithInclude();
